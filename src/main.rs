@@ -1,4 +1,5 @@
-use actix_web::{get, post, App, HttpResponse, HttpServer, Responder, web};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result};
+use serde::Serialize;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -7,6 +8,7 @@ async fn main() -> std::io::Result<()> {
             .service(hello)
             .service(echo)
             .route("/hello", web::get().to(manual_hello))
+            .service(json)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
@@ -25,4 +27,17 @@ async fn manual_hello() -> impl Responder {
 #[post("/echo")]
 async fn echo(req_body: String) -> impl Responder {
     HttpResponse::Ok().body(req_body)
+}
+
+#[derive(Serialize)]
+struct MyObj {
+    name: String,
+}
+
+#[get("/json/{name}")]
+async fn json(name: web::Path<String>) -> Result<impl Responder> {
+    let obj = MyObj {
+        name: name.to_string(),
+    };
+    Ok(web::Json(obj))
 }
