@@ -1,43 +1,25 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result};
-use serde::Serialize;
+use awc::Client;
+use log::LevelFilter;
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
-        App::new()
-            .service(hello)
-            .service(echo)
-            .route("/hello", web::get().to(manual_hello))
-            .service(json)
-    })
-    .bind(("127.0.0.1", 8080))?
-    .run()
-    .await
-}
+#[actix_rt::main]
+async fn main() {
+    env_logger::Builder::new()
+        .filter(None, LevelFilter::Debug)
+        .init();
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
+    let client = Client::default();
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
+    let res = client
+        .get("http://httpbin.org/ip")
+        .insert_header(("Content-Type", "application/json"))
+        .send()
+        .await;
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
+    if res.is_err() {
+        log::error!("Wikipedia did not return expected image");
+    }
 
-#[derive(Serialize)]
-struct MyObj {
-    name: String,
-}
+    let body = res.unwrap().body().await.unwrap();
 
-#[get("/json/{name}")]
-async fn json(name: web::Path<String>) -> Result<impl Responder> {
-    let obj = MyObj {
-        name: name.to_string(),
-    };
-    Ok(web::Json(obj))
+    log::debug!("Response: {:?}", body);
 }
