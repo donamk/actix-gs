@@ -17,7 +17,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
 
     let mut res = client
-        .get("http://httpbin.org/ip")
+        .get("https://httpbin.org/ip")
         .insert_header(("Content-Type", "application/json"))
         .send()
         .await?;
