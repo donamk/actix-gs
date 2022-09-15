@@ -1,5 +1,5 @@
+use crate::api::create_category;
 use crate::configuration::{DatabaseSettings, Settings};
-use actix_files::Files;
 use actix_web::dev::Server;
 use actix_web::web::Data;
 use actix_web::{web, App, HttpResponse, HttpServer};
@@ -55,11 +55,7 @@ async fn run(
     let server = HttpServer::new(move || {
         App::new()
             .route("/health_check", web::get().to(health_check))
-            .service(
-                Files::new("/", "./public")
-                    .prefer_utf8(true)
-                    .index_file("index.html"),
-            )
+            .service(web::scope("/api/v1").route("/category", web::post().to(create_category)))
             .app_data(base_url.clone())
             .app_data(db_pool.clone())
     })
